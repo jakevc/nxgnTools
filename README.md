@@ -1,2 +1,2 @@
-# nxgn_tools_go
+# goNxgnTools 
 Learning golang by rewriting nxgn tools in golang
