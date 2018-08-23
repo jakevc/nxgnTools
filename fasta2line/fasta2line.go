@@ -17,7 +17,8 @@ func check(e error) {
 
 func combineSeqLine(path string) {
 	// read file by line
-	inFile, _ := os.Open(path)
+	inFile, err := os.Open(path)
+	check(err)
 	defer inFile.Close()
 	scanner := bufio.NewScanner(inFile)
 	scanner.Split(bufio.ScanLines)
