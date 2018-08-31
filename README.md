@@ -21,7 +21,6 @@ Learning golang by rewriting nxgn tools in golang
 
 # TODO
 
-	 - fastqWalk
 	 - knrom
 	 - kspec
 	 - getGenname

@@ -1,5 +1,10 @@
 package main
 
+/*
+This program converts all multiline fasta entries in a file to
+single line fasta entries.
+*/
+
 import (
 	"bufio"
 	"bytes"
@@ -26,6 +31,7 @@ func combineSeqLine(path string) {
 	var entry bytes.Buffer
 	var first bool = true
 
+	// scan and parse lines
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -34,10 +40,12 @@ func combineSeqLine(path string) {
 			entry.WriteString(line + "\n")
 			first = false
 		}
+		// write header
 		if strings.HasPrefix(line, ">") {
 			header := line
 			entry.WriteString("\n" + header + "\n")
 		}
+		// write seq
 		if !strings.HasPrefix(line, ">") {
 			entry.WriteString(line)
 		}
