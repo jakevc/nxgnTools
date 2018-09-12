@@ -21,10 +21,10 @@ var (
 )
 
 type fastqEntry struct {
-	Head string
-	Seq  string
-	Plus string
-	Qual string
+	Head    string
+	SeqLine string
+	Plus    string
+	Qual    string
 }
 
 func keepSeq(seq string, k int, kcov int) bool {
@@ -33,7 +33,7 @@ func keepSeq(seq string, k int, kcov int) bool {
 
 	num := len(seq) - k + 1
 	// kmerize the seq
-	for i := 1; i <= num; i++ {
+	for i := 1; i < num; i++ {
 		kmer := seq[i : k+i]
 		// frequency of each kmer
 		kdict[kmer] += 1
@@ -52,12 +52,12 @@ func keepSeq(seq string, k int, kcov int) bool {
 	med, err := covList.Median()
 	if err != nil {
 		fmt.Println("Error in Median Func:", err)
+		return false
 	}
 	if med < float64(kcov) {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 func main() {
@@ -102,18 +102,44 @@ func main() {
 	// line num
 	NR := 1
 
+	// entry
+	entry := fastqEntry{}
+
+	// counter for number of seqs filtered
+	numFiltered := 0
+
 	for scanner.Scan() {
-		entry := fastqEntry{}
 		switch lintype := NR % 4; lintype {
 		case 0:
 			entry.Qual = scanner.Text()
+			fourLines := fmt.Sprintf("%s\n%s\n%s\n%s\n",
+				entry.Head,
+				entry.SeqLine,
+				entry.Plus,
+				entry.Qual)
+
+			// write to file if keepSeq returns True
+			if keepSeq(entry.SeqLine, *ksize, *kcov) {
+				_, err := w.WriteString(fourLines)
+				if err != nil {
+					fmt.Println("Error writing entry: ", err)
+				}
+			} else {
+				numFiltered += 1
+			}
+
+		// wrtie entry to file if keepseq true then flush entry
+
 		case 1:
 			entry.Head = scanner.Text()
 		case 2:
-			entry.Seqline = scanner.Text()
+			entry.SeqLine = scanner.Text()
 		case 3:
 			entry.Plus = scanner.Text()
 		}
 		NR += 1
 	}
+
+	w.Flush()
+	fmt.Printf("Done. %d sequences were filtered out.\n", numFiltered)
 }
