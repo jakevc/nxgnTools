@@ -29,7 +29,7 @@ func lengthDist(path string) (dist map[int]int) {
 		// firstline
 		line := scanner.Text()
 		if !strings.HasPrefix(line, ">") {
-			dist[len(line)] += 1
+			dist[len(line)] ++
 		}
 	}
 
