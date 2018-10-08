@@ -21,6 +21,5 @@ Learning golang by rewriting nxgn tools in golang
 
 # TODO
 
-	 - knrom (fix bug in median func)
 	 - kspec
 	 - getGenname
