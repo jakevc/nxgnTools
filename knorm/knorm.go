@@ -9,15 +9,16 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/montanaflynn/stats"
 	"os"
+
+	"github.com/montanaflynn/stats"
 )
 
 var (
-	kcov    = flag.Int("c", 11, "Specify the limit of the kmer coverage to filter at")
+	kcov    = flag.Int("c", 11, "Specify the kmer coverage limit")
 	ksize   = flag.Int("k", 10, "Specify the kmer size to filter on")
-	infile  = flag.String("i", "", "Specify a fastq file for kmer filtering")
-	outfile = flag.String("o", "", "Specify an output filename")
+	infile  = flag.String("i", "", "Specify a fastq file for kmer filtering (path)")
+	outfile = flag.String("o", "", "Specify an output filename (path)")
 )
 
 type fastqEntry struct {
@@ -36,7 +37,7 @@ func keepSeq(seq string, k int, kcov int) bool {
 	for i := 1; i < num; i++ {
 		kmer := seq[i : k+i]
 		// frequency of each kmer
-		kdict[kmer] += 1
+		kdict[kmer]++
 	}
 
 	// get coverage
@@ -48,16 +49,24 @@ func keepSeq(seq string, k int, kcov int) bool {
 	// convert to stats type
 	var covList stats.Float64Data = kmerCoverage
 
-	// return true if median coverage is below coverage lmit
-	med, err := covList.Median()
-	if err != nil {
-		fmt.Println("Error in Median Func:", err)
-		return false
+	// variable to hold coverage status
+	var covStat bool
+
+	// the coverage list could be empty
+	if len(covList) != 0 {
+		// return true if median coverage is below coverage lmit
+		med, err := covList.Median()
+		if err != nil {
+			fmt.Println("Error in Median Func:", err)
+		}
+		// check if median coverage is less than limit
+		if med < float64(kcov) {
+			covStat = true
+		} else {
+			covStat = false
+		}
 	}
-	if med < float64(kcov) {
-		return true
-	}
-	return false
+	return covStat
 }
 
 func main() {
@@ -76,8 +85,6 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-
-	fmt.Println(flag.Args())
 
 	infi, err := os.Open(*infile)
 	if err != nil {
@@ -125,11 +132,10 @@ func main() {
 					fmt.Println("Error writing entry: ", err)
 				}
 			} else {
-				numFiltered += 1
+				numFiltered++
 			}
 
 		// wrtie entry to file if keepseq true then flush entry
-
 		case 1:
 			entry.Head = scanner.Text()
 		case 2:
@@ -137,7 +143,7 @@ func main() {
 		case 3:
 			entry.Plus = scanner.Text()
 		}
-		NR += 1
+		NR++
 	}
 
 	w.Flush()
